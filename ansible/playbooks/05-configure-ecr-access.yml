@@ -5,7 +5,6 @@
   vars:
     aws_region: ap-south-1
     aws_account_id: 475936984863
-    ecr_registry: 475936984863.dkr.ecr.ap-south-1.amazonaws.com
   tasks:
     - name: Install AWS CLI
       apt:
@@ -13,13 +12,21 @@
         state: present
         update_cache: yes
 
-    - name: Create AWS credentials directory
+    - name: Create AWS credentials directory for root
       file:
         path: /root/.aws
         state: directory
         mode: '0700'
 
-    - name: Configure AWS credentials
+    - name: Create AWS credentials directory for ubuntu
+      file:
+        path: /home/ubuntu/.aws
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0700'
+
+    - name: Configure AWS credentials for root
       copy:
         content: |
           [default]
@@ -28,7 +35,18 @@
         dest: /root/.aws/credentials
         mode: '0600'
 
-    - name: Configure AWS region
+    - name: Configure AWS credentials for ubuntu
+      copy:
+        content: |
+          [default]
+          aws_access_key_id = {{ AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = {{ AWS_SECRET_ACCESS_KEY }}
+        dest: /home/ubuntu/.aws/credentials
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+
+    - name: Configure AWS region for root
       copy:
         content: |
           [default]
@@ -37,12 +55,21 @@
         dest: /root/.aws/config
         mode: '0600'
 
-    - name: Install Docker (for ECR login)
+    - name: Configure AWS region for ubuntu
+      copy:
+        content: |
+          [default]
+          region = {{ aws_region }}
+          output = json
+        dest: /home/ubuntu/.aws/config
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+
+    - name: Install Docker
       apt:
-        name:
-          - docker.io
+        name: docker.io
         state: present
-        update_cache: yes
 
     - name: Start and enable Docker
       systemd:
@@ -56,52 +83,71 @@
         groups: docker
         append: yes
 
-    - name: Login to ECR
+    - name: Login to ECR as root
       shell: |
-        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_registry }}
+        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com
 
-    - name: Create ECR login cron job
+    - name: Create ECR login cron job for root
       cron:
         name: "ECR Docker Login"
         minute: "0"
         hour: "*/6"
-        job: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_registry }}"
+        job: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
 
 - name: Create Kubernetes ECR Secret (Master only)
   hosts: masters
-  become_user: ubuntu
+  become: yes
   vars:
     aws_region: ap-south-1
     aws_account_id: 475936984863
     ecr_registry: 475936984863.dkr.ecr.ap-south-1.amazonaws.com
   tasks:
     - name: Check if hrms namespace exists
+      become_user: ubuntu
       shell: kubectl get namespace hrms
       register: namespace_check
       ignore_errors: yes
 
     - name: Create hrms namespace if not exists
+      become_user: ubuntu
       shell: kubectl create namespace hrms
       when: namespace_check.rc != 0
 
     - name: Delete existing ECR secret if exists
+      become_user: ubuntu
       shell: kubectl delete secret ecr-registry-secret -n hrms
+      register: delete_secret
       ignore_errors: yes
 
     - name: Get ECR login token
-      shell: |
-        aws ecr get-login-password --region {{ aws_region }}
-      become: yes
+      become_user: ubuntu
+      shell: aws ecr get-login-password --region {{ aws_region }}
       register: ecr_token
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_ACCESS_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
 
-    - name: Create Kubernetes secret for ECR
+    - name: Create Kubernetes Docker registry secret
+      become_user: ubuntu
       shell: |
         kubectl create secret docker-registry ecr-registry-secret \
           --docker-server={{ ecr_registry }} \
           --docker-username=AWS \
           --docker-password="{{ ecr_token.stdout }}" \
           --namespace=hrms
+      when: ecr_token.stdout is defined
 
     - name: Patch default service account to use ECR secret
+      become_user: ubuntu
       shell: |
-        kubectl patch serviceaccount default -n hrms -p '{"imagePullSecrets": [{"name": "ecr-registry-secret"}]}'
+        kubectl patch serviceaccount default -n hrms \
+          -p '{"imagePullSecrets": [{"name": "ecr-registry-secret"}]}'
+
+    - name: Display secret status
+      become_user: ubuntu
+      shell: kubectl get secret ecr-registry-secret -n hrms
+      register: secret_status
+
+    - name: Show secret info
+      debug:
+        var: secret_status.stdout_lines
