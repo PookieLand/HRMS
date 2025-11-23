@@ -15,6 +15,8 @@ spec:
         app: user-service
         tier: backend
     spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
       containers:
       - name: user-service
         image: 475936984863.dkr.ecr.ap-south-1.amazonaws.com/hrms/user-service:latest

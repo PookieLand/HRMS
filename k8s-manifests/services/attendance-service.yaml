@@ -15,6 +15,8 @@ spec:
         app: attendance-service
         tier: backend
     spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
       containers:
       - name: attendance-service
         image: 475936984863.dkr.ecr.ap-south-1.amazonaws.com/hrms/attendance-service:latest

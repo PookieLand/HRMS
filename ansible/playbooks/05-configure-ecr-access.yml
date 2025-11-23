@@ -5,6 +5,7 @@
   vars:
     aws_region: ap-south-1
     aws_account_id: 475936984863
+    ecr_registry: 475936984863.dkr.ecr.ap-south-1.amazonaws.com
   tasks:
     - name: Install AWS CLI
       apt:
@@ -36,13 +37,71 @@
         dest: /root/.aws/config
         mode: '0600'
 
+    - name: Install Docker (for ECR login)
+      apt:
+        name:
+          - docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
     - name: Login to ECR
       shell: |
-        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com
+        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_registry }}
 
     - name: Create ECR login cron job
       cron:
         name: "ECR Docker Login"
         minute: "0"
         hour: "*/6"
-        job: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+        job: "aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_registry }}"
+
+- name: Create Kubernetes ECR Secret (Master only)
+  hosts: masters
+  become_user: ubuntu
+  vars:
+    aws_region: ap-south-1
+    aws_account_id: 475936984863
+    ecr_registry: 475936984863.dkr.ecr.ap-south-1.amazonaws.com
+  tasks:
+    - name: Check if hrms namespace exists
+      shell: kubectl get namespace hrms
+      register: namespace_check
+      ignore_errors: yes
+
+    - name: Create hrms namespace if not exists
+      shell: kubectl create namespace hrms
+      when: namespace_check.rc != 0
+
+    - name: Delete existing ECR secret if exists
+      shell: kubectl delete secret ecr-registry-secret -n hrms
+      ignore_errors: yes
+
+    - name: Get ECR login token
+      shell: |
+        aws ecr get-login-password --region {{ aws_region }}
+      become: yes
+      register: ecr_token
+
+    - name: Create Kubernetes secret for ECR
+      shell: |
+        kubectl create secret docker-registry ecr-registry-secret \
+          --docker-server={{ ecr_registry }} \
+          --docker-username=AWS \
+          --docker-password="{{ ecr_token.stdout }}" \
+          --namespace=hrms
+
+    - name: Patch default service account to use ECR secret
+      shell: |
+        kubectl patch serviceaccount default -n hrms -p '{"imagePullSecrets": [{"name": "ecr-registry-secret"}]}'
