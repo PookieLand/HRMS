@@ -342,3 +342,86 @@ def create_employee_event(
         ),
     )
 
+
+def create_leave_event(
+    source_service: str,
+    event_type: EventType,
+    leave_id: int,
+    employee_id: int,
+    employee_email: str,
+    leave_type: str,
+    start_date: str,
+    end_date: str,
+    status: str,
+    employee_name: Optional[str] = None,
+    days: Optional[int] = None,
+    reason: Optional[str] = None,
+    approved_by: Optional[str] = None,
+    approved_by_name: Optional[str] = None,
+    rejection_reason: Optional[str] = None,
+    correlation_id: Optional[str] = None,
+) -> LeaveEvent:
+    """Create a leave management event."""
+    import uuid
+    
+    return LeaveEvent(
+        event_id=str(uuid.uuid4()),
+        event_type=event_type,
+        source_service=source_service,
+        correlation_id=correlation_id,
+        data=LeaveEventData(
+            leave_id=leave_id,
+            employee_id=employee_id,
+            employee_email=employee_email,
+            employee_name=employee_name,
+            leave_type=leave_type,
+            start_date=start_date,
+            end_date=end_date,
+            days=days or 0,
+            status=status,
+            reason=reason,
+            approved_by=approved_by,
+            approved_by_name=approved_by_name,
+            rejection_reason=rejection_reason,
+        ),
+    )
+
+
+def create_attendance_event(
+    source_service: str,
+    event_type: EventType,
+    attendance_id: int,
+    employee_id: int,
+    employee_email: str,
+    date: str,
+    status: str,
+    employee_name: Optional[str] = None,
+    check_in: Optional[str] = None,
+    check_out: Optional[str] = None,
+    hours_worked: Optional[float] = None,
+    notes: Optional[str] = None,
+    correlation_id: Optional[str] = None,
+) -> AttendanceEvent:
+    """Create an attendance tracking event."""
+    import uuid
+    
+    return AttendanceEvent(
+        event_id=str(uuid.uuid4()),
+        event_type=event_type,
+        source_service=source_service,
+        correlation_id=correlation_id,
+        data=AttendanceEventData(
+            attendance_id=attendance_id,
+            employee_id=employee_id,
+            employee_email=employee_email,
+            employee_name=employee_name,
+            date=date,
+            check_in=check_in,
+            check_out=check_out,
+            status=status,
+            hours_worked=hours_worked,
+            notes=notes,
+        ),
+    )
+
+
