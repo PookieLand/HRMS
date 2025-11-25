@@ -28,12 +28,41 @@ async def lifespan(_: FastAPI):
     logger.info("Creating database and tables...")
     create_db_and_tables()
     logger.info("Database and tables created successfully")
+    
+    # Initialize Kafka Producer
+    try:
+        # Add parent directory to path to import shared modules
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+        
+        from shared.kafka import get_producer
+        
+        logger.info("Initializing Kafka producer...")
+        await get_producer(
+            bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
+            client_id=settings.KAFKA_CLIENT_ID
+        )
+        logger.info("✅ Kafka producer initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Kafka producer: {e}")
+        # We don't raise here to allow service to start without Kafka (graceful degradation)
+
     logger.info("Application startup complete")
 
     yield
 
     # Shutdown
     logger.info("Application shutting down...")
+    
+    # Close Kafka Producer
+    try:
+        from shared.kafka import close_producer
+        await close_producer()
+        logger.info("✅ Kafka producer closed")
+    except Exception as e:
+        logger.error(f"❌ Error closing Kafka producer: {e}")
+
 
 
 # Initialize FastAPI application
