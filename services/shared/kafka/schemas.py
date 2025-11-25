@@ -303,3 +303,42 @@ def create_audit_event(
             changes=changes,
         ),
     )
+
+
+def create_employee_event(
+    source_service: str,
+    event_type: EventType,
+    employee_id: int,
+    email: str,
+    first_name: str,
+    last_name: str,
+    user_id: Optional[int] = None,
+    department: Optional[str] = None,
+    position: Optional[str] = None,
+    status: Optional[str] = None,
+    hire_date: Optional[str] = None,
+    termination_date: Optional[str] = None,
+    correlation_id: Optional[str] = None,
+) -> EmployeeEvent:
+    """Create an employee lifecycle event."""
+    import uuid
+    
+    return EmployeeEvent(
+        event_id=str(uuid.uuid4()),
+        event_type=event_type,
+        source_service=source_service,
+        correlation_id=correlation_id,
+        data=EmployeeEventData(
+            employee_id=employee_id,
+            user_id=user_id,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            department=department,
+            position=position,
+            status=status,
+            hire_date=hire_date,
+            termination_date=termination_date,
+        ),
+    )
+

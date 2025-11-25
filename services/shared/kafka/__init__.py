@@ -23,6 +23,7 @@ from .schemas import (
     ComplianceEventData,
     create_notification_event,
     create_audit_event,
+    create_employee_event,
 )
 
 from .producer import KafkaProducer, get_producer, close_producer
@@ -57,6 +58,7 @@ __all__ = [
     # Factory functions
     "create_notification_event",
     "create_audit_event",
+    "create_employee_event",
     # Producer/Consumer
     "KafkaProducer",
     "KafkaConsumer",
