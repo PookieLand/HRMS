@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { AsgardeoProvider } from "@asgardeo/react";
+import { Toaster } from "sonner";
 
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
@@ -21,6 +22,13 @@ import NotFoundPage from "./pages/404.tsx";
 import ProfilePage from "./pages/profile.tsx";
 import JWTTokenPage from "./pages/jwt-token.tsx";
 import RouterErrorComponent from "./components/router-error.tsx";
+
+import EmployeeList from "./pages/employees/list.tsx";
+import AttendanceDashboard from "./pages/attendance/dashboard.tsx";
+import LeaveApply from "./pages/leaves/apply.tsx";
+import UserList from "./pages/users/list.tsx";
+import AuditLogs from "./pages/audit/logs.tsx";
+import NotificationList from "./pages/notifications/list.tsx";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -91,12 +99,80 @@ const notFoundRoute = createRoute({
   },
 });
 
+// HRMS Routes
+const employeesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/employees",
+  component: EmployeeList,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "Employees - HRMS";
+  },
+});
+
+const attendanceDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/attendance/dashboard",
+  component: AttendanceDashboard,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "Attendance Dashboard - HRMS";
+  },
+});
+
+const leavesApplyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/leaves/apply",
+  component: LeaveApply,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "Apply for Leave - HRMS";
+  },
+});
+
+const usersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/users",
+  component: UserList,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "User Management - HRMS";
+  },
+});
+
+const auditLogsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/audit/logs",
+  component: AuditLogs,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "Audit Logs - HRMS";
+  },
+});
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/notifications",
+  component: NotificationList,
+  errorComponent: RouterErrorComponent,
+  beforeLoad: () => {
+    document.title = "Notifications - HRMS";
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   errorRoute,
   profileRoute,
   jwtTokenRoute,
+  // HRMS Routes
+  employeesRoute,
+  attendanceDashboardRoute,
+  leavesApplyRoute,
+  usersRoute,
+  auditLogsRoute,
+  notificationsRoute,
   notFoundRoute,
 ]);
 
@@ -126,6 +202,7 @@ if (rootElement && !rootElement.innerHTML) {
         baseUrl={import.meta.env.VITE_ORG_BASE_URL || ""}
       >
         <AlertProvider>
+          <Toaster position="top-right" richColors />
           <RouterProvider router={router} />
         </AlertProvider>
       </AsgardeoProvider>

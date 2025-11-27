@@ -6,9 +6,7 @@ import {
   BookOpen,
   Bot,
   Building2,
-  Frame,
   LifeBuoy,
-  Map,
   PieChart,
   Send,
   Settings2,
@@ -60,87 +58,69 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
     navMain: [
       {
-        title: "Playground",
-        url: "#",
+        title: "Employees",
+        url: "/employees",
         icon: SquareTerminal,
         isActive: true,
         items: [
           {
-            title: "History",
-            url: "#",
-          },
-          {
-            title: "Starred",
-            url: "#",
-          },
-          {
-            title: "Settings",
-            url: "#",
+            title: "Employee List",
+            url: "/employees",
           },
         ],
       },
       {
-        title: "Models",
-        url: "#",
+        title: "Attendance",
+        url: "/attendance/dashboard",
         icon: Bot,
         items: [
           {
-            title: "Genesis",
-            url: "#",
-          },
-          {
-            title: "Explorer",
-            url: "#",
-          },
-          {
-            title: "Quantum",
-            url: "#",
+            title: "Dashboard",
+            url: "/attendance/dashboard",
           },
         ],
       },
       {
-        title: "Documentation",
-        url: "#",
+        title: "Leave Management",
+        url: "/leaves/apply",
         icon: BookOpen,
         items: [
           {
-            title: "Introduction",
-            url: "#",
-          },
-          {
-            title: "Get Started",
-            url: "#",
-          },
-          {
-            title: "Tutorials",
-            url: "#",
-          },
-          {
-            title: "Changelog",
-            url: "#",
+            title: "Apply for Leave",
+            url: "/leaves/apply",
           },
         ],
       },
       {
-        title: "Settings",
-        url: "#",
+        title: "Users",
+        url: "/users",
         icon: Settings2,
         items: [
           {
-            title: "General",
-            url: "#",
+            title: "User List",
+            url: "/users",
           },
+        ],
+      },
+      {
+        title: "Audit & Compliance",
+        url: "/audit/logs",
+        icon: PieChart,
+        items: [
           {
-            title: "Team",
-            url: "#",
+            title: "Audit Logs",
+            url: "/audit/logs",
           },
+        ],
+      },
+      {
+        title: "Notifications",
+        url: "/notifications",
+        icon: Send,
+        items: [
           {
-            title: "Billing",
-            url: "#",
-          },
-          {
-            title: "Limits",
-            url: "#",
+            title: "All Notifications",
+            url: "/notifications",
           },
         ],
       },
@@ -151,28 +131,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: LifeBuoy,
       },
-      {
-        title: "Feedback",
-        url: "#",
-        icon: Send,
-      },
+      // {
+      //   title: "Feedback",
+      //   url: "#",
+      //   icon: Send,
+      // },
     ],
     projects: [
-      {
-        name: "Design Engineering",
-        url: "#",
-        icon: Frame,
-      },
-      {
-        name: "Sales & Marketing",
-        url: "#",
-        icon: PieChart,
-      },
-      {
-        name: "Travel",
-        url: "#",
-        icon: Map,
-      },
+      // Commented out - not needed for HRMS
+      // {
+      //   name: "Design Engineering",
+      //   url: "#",
+      //   icon: Frame,
+      // },
+      // {
+      //   name: "Sales & Marketing",
+      //   url: "#",
+      //   icon: PieChart,
+      // },
+      // {
+      //   name: "Travel",
+      //   url: "#",
+      //   icon: Map,
+      // },
     ],
   };
 
