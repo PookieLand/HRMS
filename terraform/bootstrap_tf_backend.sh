@@ -123,6 +123,7 @@ fi
 echo "➜ Enabling deletion protection..."
 aws dynamodb update-table \
     --table-name "$DYNAMO_TABLE" \
+    --region "$AWS_REGION" \
     --deletion-protection-enabled
 echo "✔ Deletion protection enabled."
 
