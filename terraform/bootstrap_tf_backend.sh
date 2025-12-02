@@ -117,6 +117,24 @@ else
     echo "✔ DynamoDB lock table created."
 fi
 
+# ---------------------------------------------------------
+# ENABLE DELETION PROTECTION
+# ---------------------------------------------------------
+echo "➜ Enabling deletion protection..."
+aws dynamodb update-table \
+    --table-name "$DYNAMO_TABLE" \
+    --deletion-protection-enabled
+echo "✔ Deletion protection enabled."
+
+# ---------------------------------------------------------
+# ENABLE POINT-IN-TIME RECOVERY (PITR)
+# ---------------------------------------------------------
+echo "➜ Enabling point-in-time recovery (PITR)..."
+aws dynamodb update-continuous-backups \
+    --table-name "$DYNAMO_TABLE" \
+    --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+echo "✔ PITR enabled (can restore to any second in the last 35 days)."
+
 echo ""
 echo "============================================"
 echo "      Terraform backend bootstrap done       "
