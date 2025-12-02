@@ -3,11 +3,15 @@
 set -euo pipefail
 
 # ---------------------------------------------------------
-# CONFIGURATION
+# CONFIGURATION (allow overrides via environment variables)
 # ---------------------------------------------------------
-AWS_REGION="ap-south-1"
-BUCKET_NAME="hrms-terraform-backend-prod"
-DYNAMO_TABLE="hrms-terraform-locks"
+# Use environment variables to allow running this script for dev/staging/prod
+# Examples:
+#  AWS_REGION=us-east-1 TERRAFORM_BUCKET_NAME=hrms-tf-backend-staging \
+#    TERRAFORM_DYNAMO_TABLE=hrms-tf-locks ./bootstrap_tf_backend.sh
+AWS_REGION="${AWS_REGION:-ap-south-1}"
+BUCKET_NAME="${TERRAFORM_BUCKET_NAME:-hrms-terraform-backend-prod}"
+DYNAMO_TABLE="${TERRAFORM_DYNAMO_TABLE:-hrms-terraform-locks}"
 
 echo ""
 echo "============================================"
@@ -17,6 +21,10 @@ echo "Region       : $AWS_REGION"
 echo "S3 Bucket    : $BUCKET_NAME"
 echo "Dynamo Table : $DYNAMO_TABLE"
 echo ""
+
+# ---------------------------------------------------------
+# Better error reporting for common AWS CLI failures
+trap 'echo "❌ Error: AWS CLI command failed. Check AWS credentials and IAM permissions."; exit 1' ERR
 
 # ---------------------------------------------------------
 # CHECK AWS CLI
@@ -70,6 +78,9 @@ fi
 echo ""
 echo "[2/3] Applying lifecycle rule..."
 # Cleans up non-current versions after 90 days to save costs
+# Warning: Non-current state versions will be deleted after 90 days.
+# Ensure you have a backup strategy for critical state files if required.
+echo "Note: Non-current state versions will be deleted after 90 days."
 aws s3api put-bucket-lifecycle-configuration \
     --bucket "$BUCKET_NAME" \
     --lifecycle-configuration '{
