@@ -188,7 +188,9 @@ jobs:
           # Replace occurrences of <registry>/<image>:<tag> and <image>:<tag>
           for f in $FILES; do
             perl -0777 -pe "s|${REGISTRY}/${IMAGE}:[^\s\"']+|${REGISTRY}/${IMAGE}:${SHORT_TAG}|g" -i "$f" || true
-            perl -0777 -pe "s|${IMAGE}:[^\s\"']+|${REGISTRY}/${IMAGE}:${SHORT_TAG}|g" -i "$f" || true
+            # Only replace bare image references that are NOT already prefixed by the registry.
+            # Use a negative lookbehind to avoid matching inside already-updated 'registry/image:tag'.
+            perl -0777 -pe "s|(?<!\Q${REGISTRY}/\E)${IMAGE}:[^\s\"']+|${REGISTRY}/${IMAGE}:${SHORT_TAG}|g" -i "$f" || true
           done
           git add -A
           if git diff --staged --quiet; then
