@@ -36,6 +36,14 @@ resource "aws_security_group" "k8s_master_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
+  # Allow Prometheus Security Group to access Node Exporter
+  ingress {
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    cidr_blocks = ["13.201.7.62/32"]   # Prometheus public IP
+  }
+
   # NodePort Services
   ingress {
     from_port   = 30000
