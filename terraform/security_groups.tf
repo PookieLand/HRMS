@@ -1,3 +1,11 @@
+# Fetch existing Elastic IP by Name tag
+data "aws_eip" "monitor_sys_eip" {
+  filter {
+    name   = "tag:Name"
+    values = ["monitor_sys_eip"]
+  }
+}
+
 # Master Node Security Group
 resource "aws_security_group" "k8s_master_sg" {
   name        = "hrms-k8s-master-sg"
@@ -41,7 +49,7 @@ resource "aws_security_group" "k8s_master_sg" {
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
-    cidr_blocks = ["13.201.7.62/32"]   # Prometheus public IP
+    cidr_blocks = ["${data.aws_eip.monitor_sys_eip.public_ip}/32"]   # Prometheus public IP
   }
 
   # NodePort Services
@@ -115,7 +123,7 @@ resource "aws_security_group" "k8s_worker_sg" {
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
-    cidr_blocks = ["13.201.7.62/32"]   # Prometheus public IP
+    cidr_blocks = ["${data.aws_eip.monitor_sys_eip.public_ip}/32"]   # Prometheus public IP
   }
   
   # Allow all from master
