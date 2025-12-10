@@ -108,6 +108,8 @@ resource "aws_instance" "k8s_master" {
   }
 
   user_data = file("${path.module}/user_data.sh")
+  # Attach instance profile if created (for ExternalSecrets operator to access Secrets Manager)
+  iam_instance_profile = try(aws_iam_instance_profile.externalsecret_profile.name, null)
 }
 
 #-----------------------------
@@ -139,6 +141,8 @@ resource "aws_instance" "k8s_workers" {
   }
 
   user_data = file("${path.module}/user_data.sh")
+  # Attach instance profile so pods on worker nodes can use instance role credentials
+  iam_instance_profile = try(aws_iam_instance_profile.externalsecret_profile.name, null)
 }
 
 #-----------------------------

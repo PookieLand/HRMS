@@ -65,17 +65,33 @@ resource "aws_iam_policy" "externalsecret_read_policy" {
 }
 
 # IAM user for ExternalSecrets operator (if IRSA isn't available)
-resource "aws_iam_user" "externalsecret_user" {
-  name = "hrms-external-secrets-operator"
+// Create an IAM role that EC2 instances can assume (instance profile) so the ExternalSecrets operator
+// running on those nodes can read Secrets Manager without static credentials.
+
+data "aws_iam_policy_document" "assume_role_for_ec2" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
 }
 
-resource "aws_iam_user_policy_attachment" "externalsecret_attach" {
-  user       = aws_iam_user.externalsecret_user.name
+resource "aws_iam_role" "externalsecret_node_role" {
+  name               = "hrms-external-secrets-node-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_for_ec2.json
+}
+
+resource "aws_iam_role_policy_attachment" "attach_policy_to_role" {
+  role       = aws_iam_role.externalsecret_node_role.name
   policy_arn = aws_iam_policy.externalsecret_read_policy.arn
 }
 
-resource "aws_iam_access_key" "externalsecret_key" {
-  user = aws_iam_user.externalsecret_user.name
+resource "aws_iam_instance_profile" "externalsecret_profile" {
+  name = "hrms-external-secrets-instance-profile"
+  role = aws_iam_role.externalsecret_node_role.name
 }
 
 output "secretsmanager_hrms_mysql_arn" {
@@ -83,19 +99,12 @@ output "secretsmanager_hrms_mysql_arn" {
   value       = aws_secretsmanager_secret.hrms_mysql.arn
 }
 
-output "externalsecret_iam_user" {
-  description = "IAM user created for ExternalSecrets operator (use for access keys if not using IRSA)"
-  value       = aws_iam_user.externalsecret_user.name
+output "externalsecret_node_role_arn" {
+  description = "IAM role ARN to attach to EC2 instances (instance profile)"
+  value       = aws_iam_role.externalsecret_node_role.arn
 }
 
-output "externalsecret_access_key_id" {
-  description = "Access key id for ExternalSecrets operator (sensitive)"
-  value       = aws_iam_access_key.externalsecret_key.id
-  sensitive   = true
-}
-
-output "externalsecret_secret_access_key" {
-  description = "Secret access key for ExternalSecrets operator (sensitive)"
-  value       = aws_iam_access_key.externalsecret_key.secret
-  sensitive   = true
+output "externalsecret_instance_profile_name" {
+  description = "Instance profile name to attach to EC2 instances"
+  value       = aws_iam_instance_profile.externalsecret_profile.name
 }
