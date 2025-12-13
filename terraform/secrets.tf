@@ -65,7 +65,7 @@ resource "aws_secretsmanager_secret_version" "opensearch_version" {
   secret_string = jsonencode({
     username = var.opensearch_user,
     password = random_password.opensearch_password.result,
-    host     = "http://65.0.177.75:9200",
+    host     = "65.0.177.75",
   })
 }
 
