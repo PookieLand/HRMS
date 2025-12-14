@@ -44,6 +44,14 @@ resource "aws_security_group" "k8s_master_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
+  # Allow Prometheus Security Group to access ArgoCD Metrics 
+  ingress {
+    from_port   = 32083
+    to_port     = 32083
+    protocol    = "tcp"
+    cidr_blocks = ["${data.aws_eip.monitor_sys_eip.public_ip}/32"]   # Prometheus public IP
+  }
+  
   # Allow Prometheus Security Group to access Node Exporter
   ingress {
     from_port   = 9100
