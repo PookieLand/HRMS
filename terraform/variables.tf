@@ -15,7 +15,7 @@ variable "master_instance_type" {
 
 variable "worker_instance_type" {
   description = "Worker node instance type"
-  default     = "t3.medium"
+  default     = "c6a.xlarge"
 }
 
 variable "worker_count" {
