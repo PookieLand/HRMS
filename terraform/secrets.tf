@@ -1,3 +1,42 @@
+# Asgardeo secret for user-service
+resource "aws_secretsmanager_secret" "asgardeo_user_service" {
+  name        = "hrms/asgardeo"
+  description = "Asgardeo client secret for user-service"
+}
+
+resource "aws_secretsmanager_secret_version" "asgardeo_user_service_version" {
+  secret_id     = aws_secretsmanager_secret.asgardeo_user_service.id
+  secret_string = jsonencode({
+    ASGARDEO_CLIENT_SECRET = "dummy-client-secret-replace-me"
+  })
+}
+
+# CORS_ORIGINS secret for user-service (plain text for easy update)
+resource "aws_secretsmanager_secret" "cors_user_service" {
+  name        = "hrms/cors"
+  description = "CORS_ORIGINS for user-service"
+}
+
+resource "aws_secretsmanager_secret_version" "cors_user_service_version" {
+  secret_id     = aws_secretsmanager_secret.cors_user_service.id
+  secret_string = jsonencode({
+    CORS_ORIGINS = "https://localhost,http://localhost:3000,http://localhost:8080"
+  })
+}
+
+# SMTP secret for notification-service
+resource "aws_secretsmanager_secret" "smtp_notification_service" {
+  name        = "hrms/notification-service/smtp"
+  description = "SMTP credentials for notification-service"
+}
+
+resource "aws_secretsmanager_secret_version" "smtp_notification_service_version" {
+  secret_id     = aws_secretsmanager_secret.smtp_notification_service.id
+  secret_string = jsonencode({
+    SMTP_USER         = "dummy-smtp-user-replace-me",
+    SMTP_APP_PASSWORD = "dummy-smtp-password-replace-me"
+  })
+}
 // Terraform resources to create AWS Secrets Manager secret for MySQL and an IAM user/policy
 
 resource "random_password" "mysql_root" {
