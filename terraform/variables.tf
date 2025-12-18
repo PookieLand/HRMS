@@ -62,3 +62,16 @@ variable "nlb_name" {
   type        = string
   default     = "hrms-istio-nlb"
 }
+
+# Toggle and name for staging NLB (ports 8080/8443)
+variable "enable_staging_nlb" {
+  description = "Whether to provision a separate staging NLB (8080/8443)"
+  type        = bool
+  default     = true
+}
+
+variable "staging_nlb_name" {
+  description = "Name for the staging AWS NLB"
+  type        = string
+  default     = "hrms-istio-nlb-staging"
+}
