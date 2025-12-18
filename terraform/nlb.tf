@@ -89,6 +89,35 @@ resource "aws_lb_listener" "istio_https_listener" {
   }
 }
 
+# ---------------------------------
+# Staging listeners (8080, 8443)
+# Forward to the same NodePort target groups used by prod (30080/30443)
+# This exposes separate external ports for staging traffic while keeping
+# NodePort targets unchanged on the worker nodes.
+resource "aws_lb_listener" "istio_staging_http_listener" {
+  count             = var.enable_nlb ? 1 : 0
+  load_balancer_arn = aws_lb.istio_nlb[0].arn
+  port              = 8080
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.istio_http_tg[0].arn
+  }
+}
+
+resource "aws_lb_listener" "istio_staging_https_listener" {
+  count             = var.enable_nlb ? 1 : 0
+  load_balancer_arn = aws_lb.istio_nlb[0].arn
+  port              = 8443
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.istio_https_tg[0].arn
+  }
+}
+
 # Attach all workers to the HTTP TG
 resource "aws_lb_target_group_attachment" "istio_http_tg_attachments" {
   count            = var.enable_nlb ? length(aws_instance.k8s_workers) : 0
